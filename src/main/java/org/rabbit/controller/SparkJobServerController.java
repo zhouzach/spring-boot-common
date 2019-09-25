@@ -3,17 +3,37 @@ package org.rabbit.controller;
 import org.rabbit.module.Msg;
 import org.rabbit.spark.SparkJobResult;
 import org.rabbit.spark.SubmitService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/spark/job")
 public class SparkJobServerController {
+    protected Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
     SubmitService submitService;
+
+    @GetMapping("/test/exception")
+    public void handleRequest() {
+        throw new RuntimeException("test exception");
+    }
+
+    @GetMapping("")
+    public Msg get(HttpServletRequest request, HttpServletResponse response) {
+        logger.info("hello spring boot");
+
+        Msg msg = Msg.ok("hello spring boot");
+
+
+        return msg;
+    }
 
     @GetMapping("/get/result/{jobId}")
     public SparkJobResult getSnappyJobResult(@PathVariable String jobId) {

@@ -8,6 +8,11 @@ import org.springframework.web.context.request.WebRequest;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ *
+ * https://www.mkyong.com/spring-boot/spring-rest-error-handling-example/
+ * https://stackoverflow.com/questions/38119556/change-format-timestamp-exception-spring
+ */
 @Component
 public class CustomErrorAttributes extends DefaultErrorAttributes {
 

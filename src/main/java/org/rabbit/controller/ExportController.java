@@ -3,6 +3,7 @@ package org.rabbit.controller;
 
 import lombok.val;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.rabbit.module.Book;
 import org.rabbit.module.Msg;
@@ -70,7 +71,8 @@ public class ExportController {
                     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\""+"Info1.xls"+"\"");
 
 
-                    excelWriter.write2OutputStream(workbook, "sheet1", 0, 0, header, books, output);
+                    Sheet sheet = workbook.createSheet("sheet1");
+                    excelWriter.writeData(workbook, sheet, 0, 0, books, output);
                     System.out.println("getContentType: " + response.getContentType());
                     System.out.println("Content-disposition: " + response.getHeader("Content-Disposition"));
 //                    response.setHeader("Content-disposition", "attachment; filename=Info.xls");

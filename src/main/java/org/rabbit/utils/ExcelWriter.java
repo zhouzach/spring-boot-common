@@ -1,6 +1,7 @@
 package org.rabbit.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import lombok.val;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
@@ -14,11 +15,7 @@ import org.rabbit.module.People;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class ExcelWriter {
 
@@ -44,7 +41,7 @@ public class ExcelWriter {
             cell = row.createCell(y);
             cell.setCellValue(String.valueOf(map.get(keys[k])));
 
-            CellStyle  cellStyle = setBorderStyle(sheet);
+            CellStyle cellStyle = setBorderStyle(sheet.getWorkbook().createCellStyle());
             cell.setCellStyle(cellStyle);
         }
     }
@@ -52,30 +49,33 @@ public class ExcelWriter {
     private CellStyle setMergedHeaderStyle(Sheet sheet) {
         CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
 
-        Font font = sheet.getWorkbook().createFont();
-        font.setBold(true);
-        font.setFontHeightInPoints((short) 18);
-
+        Font font = setMergedHeaderFont(sheet);
         cellStyle.setFont(font);
 
         return cellStyle;
     }
 
-    private CellStyle setHeaderStyle(Sheet sheet) {
-        CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
+    private Font setMergedHeaderFont(Sheet sheet) {
+        Font font = sheet.getWorkbook().createFont();
+        font.setBold(true);
+        font.setFontHeightInPoints((short) 18);
+        return font;
+    }
 
+    private Font setHeaderFont(Sheet sheet) {
         Font font = sheet.getWorkbook().createFont();
         font.setBold(false);
         font.setFontHeightInPoints((short) 14);
+        return font;
+    }
 
+    private CellStyle setHeaderStyle(Sheet sheet) {
+        CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
+
+        Font font = setHeaderFont(sheet);
         cellStyle.setFont(font);
 
-        cellStyle.setBorderLeft(BorderStyle.THIN);
-        cellStyle.setBorderRight(BorderStyle.THIN);
-        cellStyle.setBorderTop(BorderStyle.THIN);
-        cellStyle.setBorderBottom(BorderStyle.THIN);
-
-        return cellStyle;
+        return setBorderStyle(cellStyle);
     }
 
     private void createHeaderRow(Sheet sheet, int x, int y, List<String> headerList) {
@@ -169,7 +169,7 @@ public class ExcelWriter {
         writeData(sheet, firstRow + 1, firstCol, dataList);
     }
 
-    private void write2File(Workbook workbook, String filename){
+    private void write2File(Workbook workbook, String filename) {
         OutputStream outputStream = null;
         try {
             outputStream = new FileOutputStream(filename);
@@ -179,7 +179,7 @@ public class ExcelWriter {
         } finally {
             try {
                 outputStream.close();
-            }catch (IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 
@@ -207,29 +207,31 @@ public class ExcelWriter {
 //        RegionUtil.setBottomBorderColor(IndexedColors.LIGHT_ORANGE.getIndex(), region, sheet);
     }
 
-    private CellStyle setBorderStyle(Sheet sheet) {
-        CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
+    private CellStyle setBorderStyle(CellStyle cellStyle) {
         cellStyle.setBorderLeft(BorderStyle.THIN);
         cellStyle.setBorderRight(BorderStyle.THIN);
         cellStyle.setBorderTop(BorderStyle.THIN);
         cellStyle.setBorderBottom(BorderStyle.THIN);
 
+        cellStyle.setAlignment(HorizontalAlignment.CENTER);
+        cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+
         return cellStyle;
     }
 
-    private Sheet createSheetByName(Workbook workbook, String sheetName) {
+    public Sheet createSheetByName(Workbook workbook, String sheetName) {
         return workbook.createSheet(sheetName);
     }
 
-    private Sheet createSheetByName(String sheetName) {
+    public Sheet createSheetByName(String sheetName) {
         return getWorkbookByFilename("*.xls").createSheet(sheetName);
     }
 
-    private Sheet createSheetByName(String excelFilePath, String sheetName) {
+    public Sheet createSheetByName(String excelFilePath, String sheetName) {
         return getWorkbookByFilename(excelFilePath).createSheet(sheetName);
     }
 
-    private Workbook getWorkbookByFilename(String excelFilePath) {
+    public Workbook getWorkbookByFilename(String excelFilePath) {
         Workbook workbook;
 
         if (excelFilePath.endsWith("xlsx")) {
@@ -285,11 +287,37 @@ public class ExcelWriter {
     public static void main(String[] args) {
         ExcelWriter excelWriter = new ExcelWriter();
 
-        List<Book> listBook = excelWriter.getListBook();
-        List<Map<String, Object>> data = listBook.stream().map(ExcelWriter::toMap).collect(Collectors.toList());
+//        List<Book> listBook = excelWriter.getListBook();
+//        List<Map<String, Object>> data = listBook.stream().map(ExcelWriter::toMap).collect(Collectors.toList());
+        List<Map<String, Object>> data1 = new ArrayList<>();
 
-        List<People> listPeople = excelWriter.getListPeople();
-        List<Map<String, Object>> dataPeople = listPeople.stream().map(ExcelWriter::toMap).collect(Collectors.toList());
+        data1.add(ImmutableMap.<String, Object>builder()
+                .put("k1", "v1")
+                .put("k2", "v2")
+                .put("k3", "v3")
+                .build());
+        data1.add(ImmutableMap.<String, Object>builder()
+                .put("m1", "n1")
+                .put("m2", "n2")
+                .put("m3", "n3")
+                .build());
+
+//        List<People> listPeople = excelWriter.getListPeople();
+//        List<Map<String, Object>> dataPeople = listPeople.stream().map(ExcelWriter::toMap).collect(Collectors.toList());
+        List<Map<String, Object>> data2 = new ArrayList<>();
+
+        data2.add(ImmutableMap.<String, Object>builder()
+                .put("k1", "v1")
+                .put("k2", "v2")
+                .put("k3", "v3")
+                .put("k4", "v4")
+                .build());
+        data2.add(ImmutableMap.<String, Object>builder()
+                .put("m1", "n1")
+                .put("m2", "n2")
+                .put("m3", "n3")
+                .put("m4", "n4")
+                .build());
 
         List<String> headerList = Arrays.asList("title", "author", "price");
 
@@ -298,17 +326,20 @@ public class ExcelWriter {
         headerMap.put("北京", Arrays.asList("朝阳区", "东城区", "西城区", "海淀区"));
 
         Map<String, List<Map<String, Object>>> dataMap = new HashMap<>();
-        dataMap.put("上海", data);
-        dataMap.put("北京", dataPeople);
+        dataMap.put("上海", data1);
+        dataMap.put("北京", data2);
 
 
-        String filename = "JavaBoosk.xlsx";
+        String filename = "output.xls";
+//        String filename = "output.xlsx";
         Workbook workbook = excelWriter.getWorkbookByFilename(filename);
         Sheet sheet1 = excelWriter.createSheetByName(workbook, "sheet1");
         Sheet sheet2 = excelWriter.createSheetByName(workbook, "sheet2");
 
-        excelWriter.write2Sheet(sheet1, headerList, data);
+        excelWriter.write2Sheet(sheet1, headerList, data1);
         excelWriter.write2SheetWithMergedCellHeader(sheet2, headerMap, dataMap);
+//        excelWriter.write2Sheet(sheet1, 3, 3, headerList, data1);
+//        excelWriter.write2SheetWithMergedCellHeader(sheet2, 4, 5, 4, headerMap, dataMap);
 
         excelWriter.write2File(workbook, filename);
 

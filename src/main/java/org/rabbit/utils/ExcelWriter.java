@@ -23,42 +23,57 @@ import java.util.stream.Collectors;
 public class ExcelWriter {
 
 
-    public void writeData(
-            Workbook workbook, Sheet sheet,
-            Integer x, Integer y,
-            List<Map<String, Object>> data,
-            OutputStream outputStream) {
+    private void writeData(Sheet sheet, Integer x, Integer y, List<Map<String, Object>> data) {
 
+        int n = x;
         for (Map<String, Object> map : data) {
-
-            int n = ++x;
             Row row = sheet.getRow(n);
             if (row == null) {
                 row = sheet.createRow(n);
             }
-
-            setCellValue(y, map, row);
+            setCellValue(y, map, row, sheet);
+            n++;
         }
 
     }
 
-    private void setCellValue(Integer y, Map<String, Object> map, Row row) {
+    private void setCellValue(Integer y, Map<String, Object> map, Row row, Sheet sheet) {
         Object[] keys = map.keySet().toArray();
+        Cell cell;
         for (int k = 0; k < keys.length; k++, y++) {
-            row.createCell(y)
-                    .setCellValue(String.valueOf(map.get(keys[k])));
+            cell = row.createCell(y);
+            cell.setCellValue(String.valueOf(map.get(keys[k])));
+
+            CellStyle  cellStyle = setBorderStyle(sheet);
+            cell.setCellStyle(cellStyle);
         }
     }
 
-
-    private CellStyle createHeaderStyle(Sheet sheet) {
+    private CellStyle setMergedHeaderStyle(Sheet sheet) {
         CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
 
         Font font = sheet.getWorkbook().createFont();
         font.setBold(true);
-        font.setFontHeightInPoints((short) 16);
+        font.setFontHeightInPoints((short) 18);
 
         cellStyle.setFont(font);
+
+        return cellStyle;
+    }
+
+    private CellStyle setHeaderStyle(Sheet sheet) {
+        CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
+
+        Font font = sheet.getWorkbook().createFont();
+        font.setBold(false);
+        font.setFontHeightInPoints((short) 14);
+
+        cellStyle.setFont(font);
+
+        cellStyle.setBorderLeft(BorderStyle.THIN);
+        cellStyle.setBorderRight(BorderStyle.THIN);
+        cellStyle.setBorderTop(BorderStyle.THIN);
+        cellStyle.setBorderBottom(BorderStyle.THIN);
 
         return cellStyle;
     }
@@ -69,7 +84,7 @@ public class ExcelWriter {
         if (row == null) {
             row = sheet.createRow(x);
         }
-        CellStyle cellStyle = createHeaderStyle(sheet);
+        CellStyle cellStyle = setHeaderStyle(sheet);
 
         for (int k = 0; k < headerList.size(); y++, k++) {
             Cell cellTitle = row.createCell(y);
@@ -93,9 +108,6 @@ public class ExcelWriter {
         sheet.addMergedRegion(region);
 
         // 2.设置合并单元格内容
-        System.out.println(firstRow);
-        System.out.println(firstCol);
-        System.out.println(value);
         Row row = sheet.getRow(firstRow);
         if (row == null) {
             row = sheet.createRow(firstRow);
@@ -103,18 +115,27 @@ public class ExcelWriter {
         Cell cell = row.createCell(firstCol);
         cell.setCellValue(value);
 
+        CellStyle cellStyle = setMergedHeaderStyle(sheet);
+        cell.setCellStyle(cellStyle);
+
         // 设置单元格内容水平垂直居中
         CellUtil.setAlignment(cell, HorizontalAlignment.CENTER);
         CellUtil.setVerticalAlignment(cell, VerticalAlignment.CENTER);
 
         // 3.设置合并单元格边框
-        setBorderStyle(sheet, region);
+        setBorderStyle4Region(sheet, region);
     }
 
-    private void write2WorkbookWithMergedCellHeader(Workbook workbook, Sheet sheet, int firstRow, int lastRow, int firstCol,
-                                                    Map<String, List<String>> headerMap,
-                                                    Map<String, List<Map<String, Object>>> dataMap,
-                                                    OutputStream outputStream) {
+    private void write2SheetWithMergedCellHeader(Sheet sheet,
+                                                 Map<String, List<String>> headerMap,
+                                                 Map<String, List<Map<String, Object>>> dataMap) {
+        write2SheetWithMergedCellHeader(sheet, 0, 0, 0, headerMap, dataMap);
+    }
+
+    private void write2SheetWithMergedCellHeader(Sheet sheet, int firstRow, int lastRow, int firstCol,
+                                                 Map<String, List<String>> headerMap,
+                                                 Map<String, List<Map<String, Object>>> dataMap
+    ) {
         int lastCol = 0;
         val keys = headerMap.keySet().toArray();
         for (int i = 0; i < keys.length; i++) {
@@ -127,43 +148,88 @@ public class ExcelWriter {
 
 
             List<Map<String, Object>> dataList = dataMap.get(keys[i]);
-            writeData(workbook, sheet, lastRow + 1 , firstCol, dataList, outputStream);
+            writeData(sheet, lastRow + 1 + 1, firstCol, dataList);
             firstCol = firstCol + headerList.size();
         }
     }
 
-    private void write2Workbook(Workbook workbook, Sheet sheet,
-                                int firstRow, int firstCol,
-                                                     List<String> headerList,
-                                                    List<Map<String, Object>> dataList,
-                                                    OutputStream outputStream) {
+    private void write2Sheet(Sheet sheet,
+                             List<String> headerList,
+                             List<Map<String, Object>> dataList) {
+        write2Sheet(sheet, 0, 0, headerList, dataList);
+
+    }
+
+    private void write2Sheet(Sheet sheet,
+                             int firstRow, int firstCol,
+                             List<String> headerList,
+                             List<Map<String, Object>> dataList) {
 
         createHeaderRow(sheet, firstRow, firstCol, headerList);
-        writeData(workbook, sheet, firstRow, firstCol, dataList, outputStream);
+        writeData(sheet, firstRow + 1, firstCol, dataList);
+    }
+
+    private void write2File(Workbook workbook, String filename){
+        OutputStream outputStream = null;
+        try {
+            outputStream = new FileOutputStream(filename);
+            workbook.write(outputStream);
+        } catch (IOException exp) {
+            exp.printStackTrace();
+        } finally {
+            try {
+                outputStream.close();
+            }catch (IOException e){
+                e.printStackTrace();
+            }
+
+        }
     }
 
     /**
      * 设置合并单元格边框 - 线条
      */
-    private void setBorderStyle(Sheet sheet, CellRangeAddress region) {
+    private void setBorderStyle4Region(Sheet sheet, CellRangeAddress region) {
         // 合并单元格左边框样式
-        RegionUtil.setBorderLeft(BorderStyle.THICK, region, sheet);
-        RegionUtil.setLeftBorderColor(IndexedColors.LIGHT_BLUE.getIndex(), region, sheet);
+        RegionUtil.setBorderLeft(BorderStyle.THIN, region, sheet);
+//        RegionUtil.setLeftBorderColor(IndexedColors.LIGHT_BLUE.getIndex(), region, sheet);
 
         // 合并单元格上边框样式
-        RegionUtil.setBorderTop(BorderStyle.THICK, region, sheet);
-        RegionUtil.setTopBorderColor(IndexedColors.LIGHT_ORANGE.getIndex(), region, sheet);
+        RegionUtil.setBorderTop(BorderStyle.THIN, region, sheet);
+//        RegionUtil.setTopBorderColor(IndexedColors.LIGHT_ORANGE.getIndex(), region, sheet);
 
         // 合并单元格右边框样式
-        RegionUtil.setBorderRight(BorderStyle.THICK, region, sheet);
-        RegionUtil.setRightBorderColor(IndexedColors.LIGHT_BLUE.getIndex(), region, sheet);
+        RegionUtil.setBorderRight(BorderStyle.THIN, region, sheet);
+//        RegionUtil.setRightBorderColor(IndexedColors.LIGHT_BLUE.getIndex(), region, sheet);
 
         // 合并单元格下边框样式
-        RegionUtil.setBorderBottom(BorderStyle.THICK, region, sheet);
-        RegionUtil.setBottomBorderColor(IndexedColors.LIGHT_ORANGE.getIndex(), region, sheet);
+        RegionUtil.setBorderBottom(BorderStyle.THIN, region, sheet);
+//        RegionUtil.setBottomBorderColor(IndexedColors.LIGHT_ORANGE.getIndex(), region, sheet);
     }
 
-    private Workbook getWorkbook(String excelFilePath) {
+    private CellStyle setBorderStyle(Sheet sheet) {
+        CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
+        cellStyle.setBorderLeft(BorderStyle.THIN);
+        cellStyle.setBorderRight(BorderStyle.THIN);
+        cellStyle.setBorderTop(BorderStyle.THIN);
+        cellStyle.setBorderBottom(BorderStyle.THIN);
+
+        return cellStyle;
+    }
+
+    private Sheet createSheetByName(Workbook workbook, String sheetName) {
+        return workbook.createSheet(sheetName);
+    }
+
+    private Sheet createSheetByName(String sheetName) {
+        return getWorkbookByFilename("*.xls").createSheet(sheetName);
+    }
+
+    private Sheet createSheetByName(String excelFilePath, String sheetName) {
+        return getWorkbookByFilename(excelFilePath).createSheet(sheetName);
+    }
+
+    private Workbook getWorkbookByFilename(String excelFilePath) {
         Workbook workbook;
 
         if (excelFilePath.endsWith("xlsx")) {
@@ -206,7 +272,7 @@ public class ExcelWriter {
         people1.setScore(78.3);
 
 
-        List<People> list= Arrays.asList(people, people1);
+        List<People> list = Arrays.asList(people, people1);
 
         return list;
     }
@@ -227,38 +293,24 @@ public class ExcelWriter {
 
         List<String> headerList = Arrays.asList("title", "author", "price");
 
-        Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("sheet1");
-
         Map<String, List<String>> headerMap = new HashMap<>();
         headerMap.put("上海", Arrays.asList("宝山区", "闵行区", "静安区"));
         headerMap.put("北京", Arrays.asList("朝阳区", "东城区", "西城区", "海淀区"));
 
         Map<String, List<Map<String, Object>>> dataMap = new HashMap<>();
-        dataMap.put("上海",data);
-        dataMap.put("北京",dataPeople);
-
-        OutputStream outputStream = null;
+        dataMap.put("上海", data);
+        dataMap.put("北京", dataPeople);
 
 
-        excelWriter.write2WorkbookWithMergedCellHeader(workbook, sheet, 0, 0, 0, headerMap, dataMap, outputStream);
-//        excelWriter.write2Workbook(workbook,sheet,0,0,headerList, data, outputStream);
+        String filename = "JavaBoosk.xlsx";
+        Workbook workbook = excelWriter.getWorkbookByFilename(filename);
+        Sheet sheet1 = excelWriter.createSheetByName(workbook, "sheet1");
+        Sheet sheet2 = excelWriter.createSheetByName(workbook, "sheet2");
 
-        try {
-            String filename = "JavaBoosk1.xlsx";
-            outputStream = new FileOutputStream(filename);
-            workbook.write(outputStream);
-            outputStream.flush();
+        excelWriter.write2Sheet(sheet1, headerList, data);
+        excelWriter.write2SheetWithMergedCellHeader(sheet2, headerMap, dataMap);
 
-        } catch (IOException exp) {
-            exp.printStackTrace();
-        } finally {
-            try {
-                outputStream.close();
-            } catch (IOException exp) {
-                exp.printStackTrace();
-            }
-        }
+        excelWriter.write2File(workbook, filename);
 
     }
 }

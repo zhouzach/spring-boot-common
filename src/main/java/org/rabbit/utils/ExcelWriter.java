@@ -108,7 +108,7 @@ public class ExcelWriter {
         sheet.addMergedRegion(region);
 
         // 2.设置合并单元格内容
-        Row row = sheet.getRow(firstRow);
+        Row row = sheet.getRow(firstRow); //判断是在同一行追加还是新建一行
         if (row == null) {
             row = sheet.createRow(firstRow);
         }

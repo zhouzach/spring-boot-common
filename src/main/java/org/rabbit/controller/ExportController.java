@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
@@ -59,7 +60,7 @@ public class ExportController {
                     Workbook workbook = new HSSFWorkbook();
 //                    Workbook workbook = new XSSFWorkbook();
 
-                    List<String> header = Arrays.asList("title", "author", "price");
+                    List<String> headerList = Arrays.asList("title", "author", "price");
 //                    excelWriter.write2OutputStream(header, listBook, workbook, "book1", output);
 
 //                    String fileName = URLEncoder.encode("download", "UTF-8");
@@ -72,9 +73,15 @@ public class ExportController {
 
 
                     Sheet sheet = workbook.createSheet("sheet1");
+                    excelWriter.write2Sheet(sheet, headerList, books);
+                    excelWriter.write2OutputStream(workbook, output);
 //                    excelWriter.writeData(workbook, sheet, 0, 0, books, output);
                     System.out.println("getContentType: " + response.getContentType());
                     System.out.println("Content-disposition: " + response.getHeader("Content-Disposition"));
+//                    OutputStream os = new BufferedOutputStream(response.getOutputStream());
+
+                    output.flush();
+                    output.close();
 //                    response.setHeader("Content-disposition", "attachment; filename=Info.xls");
 //                    response.setContentType("application/msexcel");
 //                    output.close();

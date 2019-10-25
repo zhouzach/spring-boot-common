@@ -153,7 +153,7 @@ public class ExcelWriter {
         }
     }
 
-    private void write2Sheet(Sheet sheet,
+    public void write2Sheet(Sheet sheet,
                              List<String> headerList,
                              List<Map<String, Object>> dataList) {
         write2Sheet(sheet, 0, 0, headerList, dataList);
@@ -169,7 +169,7 @@ public class ExcelWriter {
         writeData(sheet, firstRow + 1, firstCol, dataList);
     }
 
-    private void write2File(Workbook workbook, String filename) {
+    public void write2File(Workbook workbook, String filename) {
         OutputStream outputStream = null;
         try {
             outputStream = new FileOutputStream(filename);
@@ -183,6 +183,14 @@ public class ExcelWriter {
                 e.printStackTrace();
             }
 
+        }
+    }
+
+    public void write2OutputStream(Workbook workbook, OutputStream outputStream) {
+        try {
+            workbook.write(outputStream);
+        } catch (IOException exp) {
+            exp.printStackTrace();
         }
     }
 

@@ -126,7 +126,7 @@ public class ExcelWriter {
         setBorderStyle4Region(sheet, region);
     }
 
-    private void write2SheetWithMergedCellHeader(Sheet sheet,
+    public void write2SheetWithMergedCellHeader(Sheet sheet,
                                                  Map<String, List<String>> headerMap,
                                                  Map<String, List<Map<String, Object>>> dataMap) {
         write2SheetWithMergedCellHeader(sheet, 0, 0, 0, headerMap, dataMap);
@@ -173,7 +173,7 @@ public class ExcelWriter {
         OutputStream outputStream = null;
         try {
             outputStream = new FileOutputStream(filename);
-            workbook.write(outputStream);
+            write2OutputStream(workbook,outputStream);
         } catch (IOException exp) {
             exp.printStackTrace();
         } finally {

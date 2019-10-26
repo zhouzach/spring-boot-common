@@ -11,7 +11,9 @@ import org.rabbit.utils.ExcelWriter;
 import org.rabbit.utils.ObjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,9 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,43 +54,31 @@ public class ExportController {
     @GetMapping("/export/excel")
     public void exportInfo(HttpServletResponse response){
 
-//                response.reset();
                 try {
-                    OutputStream output = response.getOutputStream();
 
                     ExcelWriter excelWriter = new ExcelWriter();
 
                     List<Book> listBook = excelWriter.getListBook();
                     val books = listBook.stream().map(ObjectHelper::toMap).collect(Collectors.toList());
-
-                    Workbook workbook = new HSSFWorkbook();
-//                    Workbook workbook = new XSSFWorkbook();
-
                     List<String> headerList = Arrays.asList("title", "author", "price");
-//                    excelWriter.write2OutputStream(header, listBook, workbook, "book1", output);
-
-//                    String fileName = URLEncoder.encode("download", "UTF-8");
-//                    fileName = URLDecoder.decode(fileName, "ISO8859_1");
-                    System.out.println("getContentType: " + response.getContentType());
-                    System.out.println("Content-disposition: " + response.getHeader("Content-Disposition"));
-
-                    response.setContentType("application/octet-stream");
-                    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\""+"Info1.xls"+"\"");
+//                    List<String> headerList = new ArrayList<>();
 
 
-                    Sheet sheet = workbook.createSheet("sheet1");
-                    excelWriter.write2Sheet(sheet, headerList, books);
-                    excelWriter.write2OutputStream(workbook, output);
-//                    excelWriter.writeData(workbook, sheet, 0, 0, books, output);
-                    System.out.println("getContentType: " + response.getContentType());
-                    System.out.println("Content-disposition: " + response.getHeader("Content-Disposition"));
-//                    OutputStream os = new BufferedOutputStream(response.getOutputStream());
+                    String filename = "Info1.xlsx";
 
-                    output.flush();
-                    output.close();
-//                    response.setHeader("Content-disposition", "attachment; filename=Info.xls");
-//                    response.setContentType("application/msexcel");
-//                    output.close();
+                    response.setContentType("application/vnd.ms-excel");
+                    response.setHeader("Content-Disposition", "attachment;filename="+URLEncoder.encode(filename, "utf-8"));
+                    OutputStream outputStream = response.getOutputStream();
+
+                     Workbook workbook = excelWriter.getWorkbookByFilename(filename);
+                    Sheet sheet1 = excelWriter.createSheetByName(workbook, "sheet1");
+                    excelWriter.write2Sheet(sheet1, headerList, books);
+//                    excelWriter.write2SheetWithMergedCellHeader(sheet1, new HashMap<String, List<String>>(), books);
+
+                    excelWriter.write2OutputStream(workbook, outputStream);
+
+                    outputStream.flush();
+                    outputStream.close();
                 }catch (IOException exp) {
                     exp.printStackTrace();
                 }

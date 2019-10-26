@@ -14,7 +14,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.0.3.RELEASE</version>
+        <version>2.2.0.RELEASE</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -29,13 +29,38 @@
         <spring.profiles.active>dev</spring.profiles.active>
     </properties>
 
+
     <repositories>
+        <repository>
+            <id>aliyun</id>
+            <name>aliyun</name>
+            <url>https://maven.aliyun.com/repository/public</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://maven.aliyun.com/repository/spring</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+
         <!--ojdbc6 for oracle g11 driver repository-->
         <repository>
             <id>codelds</id>
             <url>https://code.lds.org/nexus/content/groups/main-repo</url>
         </repository>
     </repositories>
+
 
     <dependencies>
 
@@ -179,22 +204,22 @@
             <version>1.0.0</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.fasterxml.uuid</groupId>
-            <artifactId>java-uuid-generator</artifactId>
-            <version>3.1.5</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.uuid</groupId>-->
+<!--            <artifactId>java-uuid-generator</artifactId>-->
+<!--            <version>3.1.5</version>-->
+<!--        </dependency>-->
 
-        <!-- 缓存 -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-cache</artifactId>
-        </dependency>
+<!--         缓存 -->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-cache</artifactId>-->
+<!--        </dependency>-->
         <!-- ehcache -->
-        <dependency>
-            <groupId>net.sf.ehcache</groupId>
-            <artifactId>ehcache</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>net.sf.ehcache</groupId>-->
+<!--            <artifactId>ehcache</artifactId>-->
+<!--        </dependency>-->
 
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
         <dependency>
@@ -214,8 +239,8 @@
         <!--<finalName>${artifactId}-${version}</finalName>-->
         <finalName>spring-boot-common-${spring.profiles.active}</finalName>
         <testOutputDirectory>target/test-classes</testOutputDirectory>
-        <sourceDirectory>src/main/java</sourceDirectory>
-        <scriptSourceDirectory>scripts</scriptSourceDirectory>
+<!--        <sourceDirectory>src/main/java</sourceDirectory>-->
+<!--        <scriptSourceDirectory>scripts</scriptSourceDirectory>-->
         <!--<testSourceDirectory>src/test/scala</testSourceDirectory>-->
         <resources>
             <resource>

@@ -1,8 +1,25 @@
 
+stage:
+  servers:
+    - dev.example.com
+    - another.example.com
+
+network:
+  redisConfigs:
+    - host: 192.168.66.128
+      port: 6379
+    - host: 192.168.66.129
+      port: 6380
 spring:
   cache:
     redis:
-      time-to-live: 1d
+      cluster:
+        server1:
+          host: 192.168.66.128
+          port: 6379
+        server2:
+          host: 192.168.66.129
+          port: 6380
 
     ehcache:
       config: classpath:ehcache.xml

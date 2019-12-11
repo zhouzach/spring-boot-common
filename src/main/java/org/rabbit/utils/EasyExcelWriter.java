@@ -27,6 +27,11 @@ import java.util.stream.Stream;
 
 import static com.alibaba.excel.support.ExcelTypeEnum.XLSX;
 
+/**
+ * easyexcel 快速应该指使用了流式接口，官网的例子只有25列
+ * easyexcel创建合并列的底层api也是sheet.addMergedRegionUnsafe(region)
+ * easyexcel支持的数据schema为class和list，不灵活，不支持分组的Map结构
+ */
 public class EasyExcelWriter {
 
 

@@ -1,5 +1,6 @@
 package org.rabbit.utils;
 
+import lombok.val;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellUtil;
@@ -11,11 +12,14 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.Collator;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+// it took 9 minutes
 public class SlowExcelWriter {
 
 
@@ -29,21 +33,61 @@ public class SlowExcelWriter {
         String rowName = "Date";
         List<Optional<String>> measureNames = Arrays.asList(Optional.of("Sales"), Optional.of("GC"), Optional.of("AC"));
         int dataUnitLength = 5;
-        Object[] data1= {"2019-11-19", "city1", "10000.23", 223, "39.54"};
-        Object[] data2= {"2019-11-20", "city1", "11000.23", 233, "69.54"};
-        Object[] data3= {"2019-11-19", "city2", "41000.23", 833, "49.54"};
-        Object[] data4= {"2019-11-20", "city2", "21000.23", 433, "89.54"};
+        Object[] data1 = {"2019-11-19", "city1", "10000.23", 223, "39.54"};
+        Object[] data2 = {"2019-11-20", "city1", "11000.23", 233, "69.54"};
+        Object[] data3 = {"2019-11-19", "city2", "41000.23", 833, "49.54"};
+        Object[] data4 = {"2019-11-20", "city2", "21000.23", 433, "89.54"};
         //it is very slow when there is more than 3000 cities;
 
-        Map<Object, List<Object[]>> sortCityMap = new HashMap<>();
-        sortCityMap.put("city1",Arrays.asList(data1, data2));
-        sortCityMap.put("city2",Arrays.asList(data3, data4));
 
-        Map<Object, List<Object[]>> sortDateMap = new HashMap<>();
-        sortDateMap.put("2019-11-19",Arrays.asList(data1, data3));
-        sortDateMap.put("2019-11-20",Arrays.asList(data2, data4));
+        List<Object[]> dataList = new ArrayList<>();
 
-        slowExcelWriter.writeMap2Sheet4RowColMeasure(sxssfSheet, rowName, 0, 1, 0, sortCityMap, measureNames, sortDateMap, dataUnitLength);;
+        String cityPrefix = "苏州沙县小吃景城邻里中心餐厅 JINGCHENG LINLI";
+        for (int i = 1; i < 3272; i++) {
+            Object[] objects1 = new Object[5];
+            objects1[0] = "2019-11-19";
+            objects1[1] = cityPrefix + "city" + i;
+            objects1[2] = "10" + i;
+            objects1[3] = i;
+            objects1[4] = "20" + i;
+            dataList.add(objects1);
+
+            Object[] objects2 = new Object[5];
+            objects2[0] = "2019-11-20";
+            objects2[1] = cityPrefix + "city" + i;
+            objects2[2] = "11" + i;
+            objects2[3] = i;
+            objects2[4] = "22" + i;
+            dataList.add(objects2);
+        }
+
+        Map<Object, List<Object[]>> groupByCityMap = dataList.stream().collect(Collectors.groupingBy(a -> a[1]));
+        Map<Object, List<Object[]>> sortCityMap = groupByCityMap.entrySet().stream()
+                .sorted((e1, e2) -> {
+                            String o1 = "";
+                            String o2 = "";
+                            String s1 = String.valueOf(e1.getKey());
+                            String s2 = String.valueOf(e2.getKey());
+                            if (s1 != null) o1 = s1;
+                            if (s2 != null) o2 = s2;
+
+                            Collator instance = Collator.getInstance(Locale.CHINA);
+                            return -instance.compare(o1, o2);
+                        }
+                )
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (e1, e2) -> e1, LinkedHashMap::new));
+
+
+        Map<Object, List<Object[]>> groupByDateMap = dataList.stream().collect(Collectors.groupingBy(a -> a[0]));
+        Map<Object, List<Object[]>> sortDateMap = groupByDateMap.entrySet().stream()
+                .sorted((e1, e2) -> -e1.getKey().toString().compareTo(e2.getKey().toString()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (e1, e2) -> e1, LinkedHashMap::new));
+
+
+        slowExcelWriter.writeMap2Sheet4RowColMeasure(sxssfSheet, rowName, 0, 1, 0, sortCityMap, measureNames, sortDateMap, dataUnitLength);
+        ;
 
         try {
             OutputStream outputStream = new FileOutputStream("output3000cities.xlsx");
@@ -135,6 +179,7 @@ public class SlowExcelWriter {
 
         RegionUtil.setBorderBottom(BorderStyle.THIN, region, sheet);
     }
+
     private CellStyle setMergedHeaderStyle(Sheet sheet) {
         CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
 
@@ -161,6 +206,7 @@ public class SlowExcelWriter {
             setRowHeaderValue(y, data.get(j), row, sheet);
         }
     }
+
     private void setRowHeaderValue(Integer y, Object data, Row row, Sheet sheet) {
         Cell cell;
         cell = row.createCell(y);

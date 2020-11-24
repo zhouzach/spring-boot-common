@@ -1,0 +1,86 @@
+
+stage:
+  servers:
+    - dev.example.com
+    - another.example.com
+
+network:
+  redisConfigs:
+    - host: 192.168.66.128
+      port: 6379
+    - host: 192.168.66.129
+      port: 6380
+spring:
+  cache:
+    redis:
+      cluster:
+        server1:
+          host: 192.168.66.128
+          port: 6379
+        server2:
+          host: 192.168.66.129
+          port: 6380
+
+    ehcache:
+      config: classpath:ehcache.xml
+
+  jpa:
+    properties:
+      hibernate:
+        temp:
+          use_jdbc_metadata_defaults: false
+        format_sql: false
+        analysis-dialect: org.hibernate.dialect.PostgreSQL94Dialect
+        meta-dialect: org.hibernate.dialect.MySQL57InnoDBDialect
+        hbm2ddl-auto: none
+  redis:
+    port: 6379
+    database: 0
+    timeout: 10000
+
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    initialSize: 60
+    minIdle: 1
+    maxActive: 100
+    maxWait: 6000
+    timeBetweenEvictionRunsMillis: 100
+    minEvictableIdleTimeMillis: 3000
+    validationQuery: "SELECT 'x'"
+    testWhileIdle: true
+    testOnBorrow: true
+    testOnReturn: false
+    poolPreparedStatements: false
+    maxPoolPreparedStatementPerConnectionSize: 20
+    connectionProperties: "druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000"
+    useGlobalDataSourceStat: true
+
+
+
+
+
+
+---
+spring:
+  profiles: dev
+logging:
+  level:debug
+---
+spring:
+  profiles: debug
+jpa:
+  properties:
+    hibernate:
+      format_sql: true
+logging:
+  level:
+    root: info
+---
+spring:
+  profiles: prod
+datasource:
+  meta:
+    jdbc-url: jdbc:mysql://localhost:3306/cdp?characterEncoding=utf-8&autoReconnect=true&failOverReadOnly=false
+
+
+
